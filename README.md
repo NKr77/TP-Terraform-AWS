@@ -4,7 +4,7 @@ Infrastructure de l'application NovaSphere sur AWS, décrite avec Terraform et
 déployée sur GitHub. Deux environnements isolés (`dev`, `prod`) qui
 partagent le code (modules versionnés), pas le state.
 
-## Les trois exigences non négociables
+## Les points trois importants
 
 1. **Backend partagé dès le premier commit.** Le state de chaque environnement
    vit dans le bucket S3 de l'équipe, avec verrouillage natif (`use_lockfile`).
