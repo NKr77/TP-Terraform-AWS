@@ -1,0 +1,7 @@
+# Fins de ligne Linux partout (scripts d'amorçage, fmt -check en CI)
+* text=auto eol=lf
+*.sh text eol=lf
+*.tf text eol=lf
+*.yml text eol=lf
+*.png binary
+*.jpg binary

@@ -1,0 +1,36 @@
+# --- Terraform : jamais commités ---
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+plan.txt
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# --- Variables et secrets ---
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+.env
+.env.*
+*.pem
+*.key
+credentials
+
+# --- Divers ---
+inventory.ini
+*.retry
+.DS_Store
+.vscode/
+.idea/
+
+# --- Ansible (repris du dépôt de référence) ---
+ansible/inventory-*.ini
+ansible/.vault_pass
