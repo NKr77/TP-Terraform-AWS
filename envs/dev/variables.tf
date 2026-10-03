@@ -14,3 +14,9 @@ variable "environment" {
     error_message = "environment doit valoir dev ou prod."
   }
 }
+
+variable "instance_type" {
+  description = "Type d'instance EC2 utilise pour les serveurs web"
+  type        = string
+  default     = "t3.micro"
+}
