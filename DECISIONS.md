@@ -8,5 +8,6 @@
 | 4 | Subnets publics, **pas de NAT Gateway** | NAT + subnets privés | Coût (~0,05 $/h). Les instances restent fermées : SG n'acceptant que l'ALB. |
 | 5 | Bucket de state créé en CLI (script) | Bucket géré par Terraform | Le state ne peut pas contenir le bucket qui le stocke. |
 | 6 | Learner Lab : IAM verrouillé (création de rôle et de fournisseur OIDC refusées, testé le 02/10/2026) | Rôles dédiés, OIDC | Contrainte de la plateforme. Voir `SECURITE.md` pour la compensation. |
+| 7 | Pas d'`instance_refresh` automatique dans le Learner Lab | `instance_refresh` Terraform | `autoscaling:StartInstanceRefresh` est explicitement refusée par une SCP AWS Academy. Le Launch Template reste versionné explicitement et une méthode compatible avec le lab sera utilisée pour renouveler les instances. |
 
-> À compléter : modules NovaSphere, secret, CI, extension.
+> À compléter : secret, CI, extension.
