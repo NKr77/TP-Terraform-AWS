@@ -1,0 +1,61 @@
+name: Terraform Drift
+
+on:
+  schedule:
+    - cron: "0 7 * * 1-5" # 9 h (heure de Paris) du lundi au vendredi
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_PLUGIN_CACHE_DIR: /home/ghrunner/.terraform.d/plugin-cache
+
+jobs:
+  drift:
+    name: drift (${{ matrix.env }})
+    runs-on: [self-hosted, novasphere]
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    concurrency:
+      group: tfstate-${{ matrix.env }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: envs/${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Init
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          terraform init
+
+      - name: Detecter la derive
+        env:
+          ENV_NAME: ${{ matrix.env }}
+        run: |
+          if [ -z "$(terraform state list 2>/dev/null)" ]; then
+            echo "::notice::Rien n'est deploye sur $ENV_NAME : pas de derive a verifier"
+            exit 0
+          fi
+          set +e
+          terraform plan -no-color -lock-timeout=5m -detailed-exitcode > plan.txt 2>&1
+          code=$?
+          set -e
+          cat plan.txt
+          if [ "$code" -eq 2 ]; then
+            echo "::error::Derive detectee sur $ENV_NAME"
+            {
+              echo "## Derive detectee sur $ENV_NAME"
+              echo '```'
+              grep -E '^\s*# |Plan:' plan.txt || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          exit "$code"

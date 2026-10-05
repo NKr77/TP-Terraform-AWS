@@ -1,0 +1,52 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environnement a detruire"
+        type: choice
+        options: [dev, prod]
+      confirmation:
+        description: "Retaper le nom de l'environnement pour confirmer"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_PLUGIN_CACHE_DIR: /home/ghrunner/.terraform.d/plugin-cache
+
+jobs:
+  destroy:
+    name: destroy (${{ inputs.env }})
+    runs-on: [self-hosted, novasphere]
+    environment: ${{ inputs.env }}
+    concurrency:
+      group: tfstate-${{ inputs.env }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: envs/${{ inputs.env }}
+    steps:
+      - name: Verifier la confirmation
+        if: inputs.confirmation != inputs.env
+        working-directory: .
+        run: |
+          echo "::error::Confirmation incorrecte : rien n'a ete detruit"
+          exit 1
+
+      - uses: actions/checkout@v5
+
+      - name: Init
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          terraform init
+
+      - name: Plan de destruction
+        run: terraform plan -destroy -no-color -lock-timeout=5m -out=tfplan
+
+      - name: Destruction
+        run: terraform apply -no-color -lock-timeout=5m tfplan
