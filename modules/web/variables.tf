@@ -21,6 +21,11 @@ variable "instance_type" {
 variable "ami_id" {
   description = "ID de l'AMI utilisee par les instances web"
   type        = string
+
+  validation {
+    condition     = startswith(var.ami_id, "ami-")
+    error_message = "ami_id doit commencer par ami-."
+  }
 }
 
 variable "iam_instance_profile_name" {
