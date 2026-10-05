@@ -20,3 +20,9 @@ variable "instance_type" {
   type        = string
   default     = "t3.micro"
 }
+
+variable "ami_id" {
+  description = "AMI Debian 12 figee pour l'environnement dev"
+  type        = string
+  default     = "ami-089045d4bb5fcc5d6"
+}

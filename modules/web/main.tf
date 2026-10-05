@@ -80,24 +80,9 @@ resource "aws_vpc_security_group_egress_rule" "web_dns_tcp" {
   cidr_ipv4   = "0.0.0.0/0"
 }
 
-data "aws_ami" "debian" {
-  most_recent = true
-  owners      = ["136693071363"]
-
-  filter {
-    name   = "name"
-    values = ["debian-12-amd64-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 resource "aws_launch_template" "web" {
   name_prefix   = "novasphere-${var.environment}-"
-  image_id      = data.aws_ami.debian.id
+  image_id      = var.ami_id
   instance_type = var.instance_type
 
   vpc_security_group_ids = [
@@ -160,7 +145,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_autoscaling_group" "web" {
-  name = "novasphere-${var.environment}-web"
+  name = "novasphere-${var.environment}-web-v${aws_launch_template.web.latest_version}"
 
   min_size         = var.asg_min_size
   max_size         = var.asg_max_size
@@ -172,6 +157,7 @@ resource "aws_autoscaling_group" "web" {
     aws_lb_target_group.web.arn
   ]
 
+  wait_for_elb_capacity     = var.asg_desired_capacity
   health_check_type         = "ELB"
   health_check_grace_period = 120
 
@@ -184,5 +170,9 @@ resource "aws_autoscaling_group" "web" {
     key                 = "Name"
     value               = "novasphere-${var.environment}-web"
     propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }

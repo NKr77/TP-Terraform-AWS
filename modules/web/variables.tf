@@ -18,6 +18,11 @@ variable "instance_type" {
   type        = string
 }
 
+variable "ami_id" {
+  description = "ID de l'AMI utilisee par les instances web"
+  type        = string
+}
+
 variable "iam_instance_profile_name" {
   description = "Nom du profil IAM attache aux instances EC2"
   type        = string
