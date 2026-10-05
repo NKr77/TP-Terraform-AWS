@@ -90,7 +90,10 @@ resource "aws_launch_template" "web" {
   ]
 
   user_data = base64encode(
-    file("${path.module}/bootstrap.sh")
+    templatefile("${path.module}/bootstrap.sh", {
+      aws_region                = var.aws_region
+      app_secret_parameter_name = var.app_secret_parameter_name
+    })
   )
 
   iam_instance_profile {
