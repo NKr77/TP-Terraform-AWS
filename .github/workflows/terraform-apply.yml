@@ -1,0 +1,98 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "envs/**"
+      - "modules/**"
+      - ".github/workflows/terraform-apply.yml"
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_PLUGIN_CACHE_DIR: /home/ghrunner/.terraform.d/plugin-cache
+
+jobs:
+  apply-dev:
+    name: apply (dev)
+    runs-on: [self-hosted, novasphere]
+    environment:
+      name: dev
+      url: ${{ steps.sortie.outputs.url }}
+    concurrency:
+      group: tfstate-dev
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: envs/dev
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Init
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          terraform init
+
+      - name: Plan
+        run: terraform plan -no-color -lock-timeout=5m -out=tfplan
+
+      - name: Apply du plan enregistre
+        run: terraform apply -no-color -lock-timeout=5m tfplan
+
+      - name: Adresse de l'ALB
+        id: sortie
+        run: echo "url=http://$(terraform output -raw alb_dns_name)" >> "$GITHUB_OUTPUT"
+
+      - name: Test de la page servie par l'ALB
+        env:
+          URL: ${{ steps.sortie.outputs.url }}
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/" || true)
+            if [ "$code" = "200" ]; then
+              echo "Page servie (HTTP 200) : $URL"
+              curl -s "$URL/"
+              exit 0
+            fi
+            echo "Tentative $i : HTTP $code, nouvel essai dans 10 s"
+            sleep 10
+          done
+          echo "::error::L'ALB ne repond pas en HTTP 200 apres 5 minutes"
+          exit 1
+
+  apply-prod:
+    name: apply (prod)
+    needs: apply-dev
+    runs-on: [self-hosted, novasphere]
+    environment:
+      name: prod
+      url: ${{ steps.sortie.outputs.url }}
+    concurrency:
+      group: tfstate-prod
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: envs/prod
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Init
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          terraform init
+
+      - name: Plan
+        run: terraform plan -no-color -lock-timeout=5m -out=tfplan
+
+      - name: Apply du plan enregistre
+        run: terraform apply -no-color -lock-timeout=5m tfplan
+
+      - name: Adresse de l'ALB
+        id: sortie
+        run: |
+          dns=$(terraform output -raw alb_dns_name 2>/dev/null || true)
+          if [ -n "$dns" ]; then echo "url=http://$dns" >> "$GITHUB_OUTPUT"; fi

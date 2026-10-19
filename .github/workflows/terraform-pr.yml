@@ -1,0 +1,102 @@
+name: Terraform PR
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "envs/**"
+      - "modules/**"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_PLUGIN_CACHE_DIR: /home/ghrunner/.terraform.d/plugin-cache
+
+jobs:
+  plan:
+    name: plan (${{ matrix.env }})
+    # Runner auto-heberge sur un depot public : on refuse les PR venant de forks
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, novasphere]
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    # Un seul run Terraform a la fois par environnement (meme state)
+    concurrency:
+      group: tfstate-${{ matrix.env }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: envs/${{ matrix.env }}
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v5
+
+      - name: Format
+        working-directory: .
+        run: terraform fmt -check -recursive
+
+      - name: Init
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          terraform init
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Plan
+        id: plan
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          terraform plan -no-color -lock-timeout=5m -out=tfplan 2>&1 | tee plan.txt
+
+      - name: Publier le plan en commentaire de la PR
+        uses: actions/github-script@v8
+        env:
+          ENV_NAME: ${{ matrix.env }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const envName = process.env.ENV_NAME;
+            const marker = `<!-- terraform-plan-${envName} -->`;
+            let plan = fs.readFileSync(`envs/${envName}/plan.txt`, 'utf8');
+            if (plan.length > 60000) plan = '(debut tronque)\n' + plan.slice(-60000);
+            const ok = process.env.PLAN_OUTCOME === 'success';
+            const resume = (plan.match(/^(Plan: .*|No changes\..*)$/m) || ['Voir le detail'])[0];
+            const sha = context.payload.pull_request.head.sha.substring(0, 7);
+            const body = [
+              marker,
+              `### ${ok ? '✅' : '❌'} Terraform plan : \`${envName}\``,
+              `**${resume}**`,
+              '',
+              '<details><summary>Afficher le plan complet</summary>',
+              '',
+              '```',
+              plan,
+              '```',
+              '</details>',
+              '',
+              `_Commit ${sha}_`,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Echec si le plan a echoue
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
