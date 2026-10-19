@@ -3,10 +3,8 @@ name: Terraform PR
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "envs/**"
-      - "modules/**"
-      - ".github/workflows/**"
+    # Pas de filtre paths : les checks plan (dev) et plan (prod) sont obligatoires sur main,
+    # ils doivent donc tourner sur toutes les PR, y compris celles de documentation.
 
 permissions:
   contents: read
