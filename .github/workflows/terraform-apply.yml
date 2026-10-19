@@ -71,9 +71,8 @@ jobs:
     environment:
       name: prod
       url: ${{ steps.sortie.outputs.url }}
-    concurrency:
-      group: tfstate-prod
-      cancel-in-progress: false
+    # Pas de concurrency : un job qui attend l'approbation de prod garderait le verrou
+    # et bloquerait les autres jobs de prod. Le verrou du state Terraform protege.
     defaults:
       run:
         working-directory: envs/prod

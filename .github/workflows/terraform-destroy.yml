@@ -24,9 +24,8 @@ jobs:
     name: destroy (${{ inputs.env }})
     runs-on: [self-hosted, novasphere]
     environment: ${{ inputs.env }}
-    concurrency:
-      group: tfstate-${{ inputs.env }}
-      cancel-in-progress: false
+    # Pas de concurrency : un job qui attend l'approbation de prod garderait le verrou
+    # et bloquerait les autres jobs de prod. Le verrou du state Terraform protege.
     defaults:
       run:
         working-directory: envs/${{ inputs.env }}
