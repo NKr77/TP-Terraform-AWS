@@ -93,6 +93,7 @@ resource "aws_launch_template" "web" {
     templatefile("${path.module}/bootstrap.sh", {
       aws_region                = var.aws_region
       app_secret_parameter_name = var.app_secret_parameter_name
+      environment               = var.environment
     })
   )
 
