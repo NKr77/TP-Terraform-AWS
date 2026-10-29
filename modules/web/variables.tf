@@ -51,3 +51,18 @@ variable "asg_desired_capacity" {
   type        = number
   default     = 2
 }
+
+variable "app_secret_parameter_name" {
+  description = "Nom du parametre SSM contenant le secret applicatif"
+  type        = string
+
+  validation {
+    condition     = startswith(var.app_secret_parameter_name, "/")
+    error_message = "app_secret_parameter_name doit commencer par /."
+  }
+}
+
+variable "aws_region" {
+  description = "Region AWS utilisee pour lire le secret dans Parameter Store"
+  type        = string
+}
