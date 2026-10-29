@@ -46,6 +46,7 @@
 
 - Security Group des instances : HTTP uniquement depuis le Security Group de l'ALB, pas de SSH.
 - IMDSv2 exigé sur le Launch Template (`http_tokens = "required"`).
+- Sortie des instances : 80 et 443 (paquets Debian, API Parameter Store) et 53 (DNS). La règle DNS est superflue, le résolveur du VPC n'étant pas filtré par les Security Groups : à retirer dans la prochaine version du module.
 
 ## Écarts assumés
 
