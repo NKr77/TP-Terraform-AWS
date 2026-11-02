@@ -10,7 +10,7 @@
 | 6 | Learner Lab : IAM verrouillé (création de rôle et de fournisseur OIDC refusées, testé le 02/10/2026) | Rôles dédiés, OIDC | Contrainte de la plateforme. Voir `SECURITE.md` pour la compensation. |
 | 7 | Renouvellement des instances par remplacement de l'ASG : version du Launch Template dans le nom de l'ASG, `create_before_destroy`, `wait_for_elb_capacity` | `instance_refresh` | `autoscaling:StartInstanceRefresh` est refusée par une SCP AWS Academy. Le nouvel ASG est créé et healthy avant la suppression de l'ancien, sans coupure. |
 | 8 | Module `web` versionné par tag Git (`web-v1.0.0`, `web-v2.0.0`), tags `web-v*` protégés contre la modification et la suppression | Source locale `../../modules/web` | Une version publiée ne change plus. Promotion dev → prod en changeant le `ref`. |
-| 9 | Un seul compte AWS « porteur » (lab de l'équipe) pour dev et prod ; les autres membres testent dans leur propre lab avec leur bucket (`-backend-config`) | Partager les credentials du lab | Chaque Learner Lab est un compte séparé. Partager des credentials, c'est partager un secret. |
+| 9 | Un seul compte AWS « porteur » (le lab de Nicolas) pour dev et prod ; les autres membres testent dans leur propre lab avec leur bucket (`-backend-config`) | Partager les credentials du lab | Chaque Learner Lab est un compte séparé. Partager des credentials, c'est partager un secret. |
 | 10 | CI GitHub Actions sur un **runner auto-hébergé** (VM du porteur), utilisateur dédié `ghrunner` sans sudo | OIDC ; clés du lab dans les secrets GitHub | OIDC impossible (décision 6). Aucune clé AWS n'est stockée dans GitHub. |
 | 11 | `plan -out=tfplan` puis `apply tfplan` | `apply` direct | On applique exactement le plan calculé, rien d'autre. |
 | 12 | Prod derrière un environnement GitHub protégé : approbation d'un autre membre (`Prevent self-review`), branche `main` uniquement, pas de contournement administrateur | Apply prod automatique | Exigence du cahier des charges : deux personnes pour toucher la prod. |
@@ -22,4 +22,4 @@
 | 18 | Ajout de variables obligatoires au module publié en `web-v2.0.0` | `web-v1.1.0` | SemVer : une variable obligatoire de plus casse les appelants, c'est une version majeure. |
 | 19 | Prod = même code et même `ref` de module que dev, VPC distinct `10.1.0.0/16` (dev : `10.0.0.0/16`) | Code prod divergent | Ce qui est testé en dev est ce qui part en prod. Plages séparées : pas de confusion, peering possible plus tard. |
 | 20 | Apply aussi lançable à la main (`workflow_dispatch`) | Redéployer par un commit vide | Après un destroy, on redéploie sans modifier `main` (dépôt gelé par tag). |
-| 21 | Pas d'extension ; Ansible au démarrage écarté | `ansible-pull` (bonus) | Le socle d'abord. L'amorçage tient en 9 lignes, Ansible n'apporterait rien ici. |
+| 21 | Pas d'extension, pas d'Ansible au démarrage | `ansible-pull` (bonus) | Nous avons donné la priorité au socle. L'amorçage tient en 9 lignes, Ansible n'apporterait rien ici. |
