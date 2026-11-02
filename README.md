@@ -1,7 +1,7 @@
 # NovaSphere — infrastructure dev / prod
 
 Infrastructure de l'application NovaSphere sur AWS, décrite avec Terraform et
-déployée sur GitHub. Deux environnements isolés (`dev`, `prod`) qui
+déployée par GitHub Actions. Deux environnements isolés (`dev`, `prod`) qui
 partagent le code (modules versionnés), pas le state.
 
 ## Les trois points importants
@@ -23,6 +23,9 @@ modules/web           ALB, Launch Template, ASG, Security Groups (versionné par
 scripts/              outillage hors Terraform (création du bucket de state)
 .github/workflows/    PR (plan), apply, dérive, destroy
 ```
+
+Documents : `ARCHITECTURE.md` (schéma, composants, adressage), `DECISIONS.md`, `SECURITE.md`,
+`CONTRIBUTING.md`, `CADRAGE.md`, `RESTE_A_FAIRE.md`, `DEMO.md`.
 
 ## Déployer de zéro
 

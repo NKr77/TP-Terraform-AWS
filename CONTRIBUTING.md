@@ -6,7 +6,7 @@
 4. Jamais commités : `*.tfstate*`, `*.tfvars`, `*.pem`, `.env`, credentials. Le `.gitignore` ne se modifie jamais à la baisse.
 5. `git grep` sur toute valeur sensible avant chaque push.
 6. On ne lève jamais un verrou (`force-unlock`) sans avoir demandé à l'équipe.
-7. Les modules se versionnent par tag `vX.Y.Z` ; dev reçoit la nouvelle version avant prod.
+7. Les modules se versionnent par tag `web-vX.Y.Z` ; dev reçoit la nouvelle version avant prod.
 8. Fins de ligne LF uniquement (`.gitattributes`).
 9. Rien ne tourne entre deux sessions : `destroy` (via la CI) en fin de session.
-10. Tag de gel du rendu : `v1.0.0-rendu`.
+10. Tag de gel du rendu : `rendu-final`.
