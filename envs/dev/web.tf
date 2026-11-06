@@ -6,6 +6,7 @@ module "web" {
   public_subnet_ids         = module.vpc.public_subnets
   instance_type             = var.instance_type
   ami_id                    = var.ami_id
+  asg_desired_capacity      = 3
   aws_region                = var.region
   app_secret_parameter_name = aws_ssm_parameter.app_secret.name
 }
